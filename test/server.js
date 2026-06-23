@@ -34,12 +34,12 @@ async function connectTest () {
     const message = 'FMCPE;JSRakNet - JS powered RakNet;408;1.16.20;0;5;0;JSRakNet;Creative;'
     // Use a distinct port from pingTest so the OS has fully released the socket
     // (rebinding the same port immediately can fail on macOS).
-    const server = new Server('0.0.0.0', 19132, {
+    const server = new Server('0.0.0.0', 19134, {
       maxConnections: 3,
       minecraft: {},
       message: Buffer.from(message)
     })
-    const client = new Client('127.0.0.1', 19132, 'minecraft')
+    const client = new Client('127.0.0.1', 19134, 'minecraft')
 
     server.listen()
     let lastC = 0
