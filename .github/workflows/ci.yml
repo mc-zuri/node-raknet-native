@@ -6,9 +6,10 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, feat/socks5-udp-proxy ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -33,8 +34,9 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    # Only publish when changes land on master (not on PRs).
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # Publish on direct pushes (master or the feature branch) and manual runs,
+    # but not on pull requests.
+    if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
