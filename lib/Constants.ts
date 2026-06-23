@@ -1,6 +1,20 @@
+export type Socks5ProxyOptions = {
+  // SOCKS5 proxy host (IPv4 address or hostname)
+  host: string
+  // SOCKS5 proxy port
+  port: number
+  // Optional username for RFC 1929 username/password authentication
+  username?: string
+  // Optional password for RFC 1929 username/password authentication
+  password?: string
+}
+
 export type ClientOptions = {
   // Set a custom RakNet protocol version.
   protocolVersion?: number
+  // Route all UDP traffic through a SOCKS5 proxy using UDP ASSOCIATE.
+  // Only IPv4 target servers are supported.
+  useProxy?: Socks5ProxyOptions
 }
 
 export type ServerOptions = {

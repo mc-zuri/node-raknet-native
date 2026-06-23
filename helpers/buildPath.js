@@ -15,9 +15,11 @@ module.exports = {
   },
 
   getFallbackPath () { // try to ignore OS version & load just on plat+arch
-    const dirs = fs.readdirSync(join(__dirname, '../prebuilds/'))
+    const prebuildsDir = join(__dirname, '../prebuilds/')
+    if (!fs.existsSync(prebuildsDir)) return // no prebuilds (e.g. local source build)
+    const dirs = fs.readdirSync(prebuildsDir)
     for (const dir of dirs) {
-      const [plat, ver, arch] = dir.split('-')
+      const [plat, , arch] = dir.split('-')
 
       if (plat === process.platform && arch === process.arch) {
         return join(__dirname, '../prebuilds/', dir, '/node-raknet.node')

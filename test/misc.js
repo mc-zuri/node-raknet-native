@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-const { Server, Client } = require('raknet-native')
+const { Server, Client } = require('@mc-zuri/raknet-native')
 const { PacketPriority, PacketReliability } = require('../lib/Constants')
 
 class ServerName {
