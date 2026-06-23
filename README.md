@@ -9,11 +9,22 @@ Native RakNet bindings for Node.js
 
 ## Install
 
-```sh
-npm install raknet-native
+This fork is published to GitHub Packages as `@mc-zuri/raknet-native`. Add an
+`.npmrc` so the `@mc-zuri` scope resolves to the GitHub registry:
+
+```
+@mc-zuri:registry=https://npm.pkg.github.com
 ```
 
-Prebuilds are provided for 64-bit Windows 10, Linux and macOS. If a prebuild does not work, please create an issue and set enviornment variable FORCE_BUILD to force a manual build.
+then install:
+
+```sh
+npm install @mc-zuri/raknet-native
+```
+
+The package builds from source on install (a valid CMake + C++ toolchain is
+required, see Dependencies below). If a manual build is ever needed, set the
+environment variable FORCE_BUILD.
 
 ## Usage
 
@@ -50,6 +61,27 @@ const server = new Server('0.0.0.0', 19130, { protocolVersion: 10, maxConnection
 ```
 
 For more usage examples see tests/.
+
+#### SOCKS5 UDP proxy
+
+A `Client` can route all of its RakNet UDP traffic through a SOCKS5 proxy using
+the UDP ASSOCIATE command (RFC 1928), with optional username/password
+authentication (RFC 1929). Pass `useProxy` in the client options:
+
+```ts
+const client = new Client('127.0.0.1', 19132, {
+  useProxy: {
+    host: 'proxy.example.com',
+    port: 1080,
+    username: 'user',     // optional
+    password: 'secret'    // optional
+  }
+})
+```
+
+The SOCKS5 handshake is performed synchronously when the `Client` is
+constructed; if it fails (proxy unreachable, auth rejected, etc.) the
+constructor throws. Only IPv4 target servers are currently supported.
 
 ## Cloning
 If cloning from git, you must clone the repository recursively. 

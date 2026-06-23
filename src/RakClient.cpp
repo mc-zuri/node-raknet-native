@@ -50,6 +50,21 @@ RakClient::RakClient(const Napi::CallbackInfo& info) : Napi::ObjectWrap<RakClien
         auto protocolVersion = options.Get("protocolVersion").As<Napi::Number>().Int32Value();
         this->protocolVersion = protocolVersion;
     }
+    if (options.Has("useProxy")) {
+        auto proxyVal = options.Get("useProxy");
+        if (proxyVal.IsObject()) {
+            auto proxyOpts = proxyVal.As<Napi::Object>();
+            if (!proxyOpts.Has("host") || !proxyOpts.Has("port")) {
+                Napi::TypeError::New(env, "useProxy requires 'host' and 'port'").ThrowAsJavaScriptException();
+                return;
+            }
+            this->proxyHost = proxyOpts.Get("host").As<Napi::String>().Utf8Value();
+            this->proxyPort = (unsigned short)proxyOpts.Get("port").As<Napi::Number>().Uint32Value();
+            if (proxyOpts.Has("username")) this->proxyUser = proxyOpts.Get("username").As<Napi::String>().Utf8Value();
+            if (proxyOpts.Has("password")) this->proxyPass = proxyOpts.Get("password").As<Napi::String>().Utf8Value();
+            this->useProxy = true;
+        }
+    }
 
     // Validate the hostname + port and save
     if (!this->conAddr.FromStringExplicitPort(this->hostname.c_str(), this->port, 4)) {
@@ -61,6 +76,47 @@ RakClient::RakClient(const Napi::CallbackInfo& info) : Napi::ObjectWrap<RakClien
     }
 
     this->Setup();
+
+    if (this->useProxy) {
+        std::string err;
+        if (!this->ApplyProxy(err)) {
+            Napi::Error::New(env, "SOCKS5 proxy setup failed: " + err).ThrowAsJavaScriptException();
+            return;
+        }
+    }
+}
+
+bool RakClient::ApplyProxy(std::string& errorOut) {
+    DataStructures::List<RakNet::RakNetSocket2*> sockets;
+    client->GetSockets(sockets);
+    if (sockets.Size() == 0) {
+        errorOut = "no RakNet socket available";
+        return false;
+    }
+
+    proxy = new Socks5Proxy();
+    if (!proxy->Setup(proxyHost, proxyPort, proxyUser, proxyPass, errorOut)) {
+        delete proxy;
+        proxy = nullptr;
+        return false;
+    }
+
+    RakNet::RakNetSocket2* s0 = sockets[0];
+#if defined(_WIN32)
+    if (s0->GetSocketType() == RakNet::RNS2T_WINDOWS) {
+        ((RakNet::RNS2_Windows*)s0)->SetSocketLayerOverride(proxy);
+        return true;
+    }
+#else
+    if (s0->GetSocketType() == RakNet::RNS2T_LINUX) {
+        ((RakNet::RNS2_Linux*)s0)->SetSocketLayerOverride(proxy);
+        return true;
+    }
+#endif
+    errorOut = "socket type does not support a SOCKS5 override on this platform";
+    delete proxy;
+    proxy = nullptr;
+    return false;
 }
 
 void RakClient::Setup() {

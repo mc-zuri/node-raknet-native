@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-const { Server, Client } = require('raknet-native')
+const { Server, Client } = require('@mc-zuri/raknet-native')
 const { PacketPriority, PacketReliability } = require('../lib/Constants')
 
 async function pingTest () {
@@ -32,12 +32,14 @@ async function pingTest () {
 async function connectTest () {
   return new Promise((resolve, reject) => {
     const message = 'FMCPE;JSRakNet - JS powered RakNet;408;1.16.20;0;5;0;JSRakNet;Creative;'
-    const server = new Server('0.0.0.0', 19130, {
+    // Use a distinct port from pingTest so the OS has fully released the socket
+    // (rebinding the same port immediately can fail on macOS).
+    const server = new Server('0.0.0.0', 19134, {
       maxConnections: 3,
       minecraft: {},
       message: Buffer.from(message)
     })
-    const client = new Client('127.0.0.1', 19130, 'minecraft')
+    const client = new Client('127.0.0.1', 19134, 'minecraft')
 
     server.listen()
     let lastC = 0
